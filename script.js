@@ -14,20 +14,23 @@ const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 
 navigator.geolocation.getCurrentPosition(function (res) {
-    const {latitude, longitude} = res.coords
+    const { latitude, longitude } = res.coords
     const cords = [latitude, longitude];
     const map = L.map('map').setView(cords, 13);
-    console.log(`https://www.google.com/maps/@${latitude},${longitude},14z `)
+    console.log(`https://www.google.com/maps/@${latitude},${longitude},14z `);
 
-L.tileLayer('https://tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(map);
+    L.tileLayer('https://tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
-L.marker([51.5, -0.09]).addTo(map)
-    .bindPopup('A pretty CSS popup.<br> Easily customizable.')
-    .openPopup();
+    map.on(function(mapEvent) {
+        // const = mapEvent.
+    })
+    L.marker([51.5, -0.09]).addTo(map)
+        .bindPopup('A pretty CSS popup.<br> Easily customizable.')
+        .openPopup();
 
-}, function(res) {
+}, function (res) {
     console.log(res.message)
 })
 
