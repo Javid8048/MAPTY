@@ -14,8 +14,8 @@ const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 
 class Workout {
-    date = new Data();
-    id = (Date.now()).slice(-10);
+    date = new Date();
+    id = Date.now();
     constructor(coords, distance, duration) {
         this.coords = coords;
         this.distance = distance;
@@ -30,7 +30,7 @@ class Running extends Workout {
         this.calcPace();
     }
     calcPace() {
-        this.pace  = this.duration / this.distance;
+        this.pace = this.duration / this.distance;
         return this.pace;
     }
 }
@@ -55,11 +55,12 @@ console.log(run1, cycling1);
 class App {
     #map;
     #mapEvent;
+    #workouts = [];
     constructor() {
         this._getPosition();
 
         form.addEventListener("submit", this._newWorkout.bind(this));
-        inputType.addEventListener("change", )
+        inputType.addEventListener("change", this._showForm.bind(this))
     }
 
     _getPosition() {
@@ -85,22 +86,43 @@ class App {
     }
 
     _toggleElevationField() {
-        console.log(value)
         inputElevation.closest(".form__row").classList.toggle("form__row--hidden");
         inputCadence.closest(".form__row").classList.toggle("form__row--hidden");
-     }
+    }
 
     _newWorkout(e) {
         e.preventDefault();
-            inputDistance.value = inputDuration.value = inputCadence.value = inputElevation.value = "";
-            form.classList.add("hidden");
-            const { lat, lng } = mapEvent.latlng
-            L.marker([lat, lng]).addTo(map).bindPopup(L.popup(
-                {
-                    maxWindth: 250, minWidth: 100, closeOnClick: false, autoClose: false, keepInView: true, className: "running-popup"
-                }))
-                .setPopupContent("work <br> out")
-                .openPopup()
+        inputDistance.value = inputDuration.value = inputCadence.value = inputElevation.value = "";
+        form.classList.add("hidden");
+        const { lat, lng } = this.#mapEvent.latlng
+        L.marker([lat, lng]).addTo(this.#map).bindPopup(L.popup(
+            {
+                maxWindth: 250, minWidth: 100, closeOnClick: false, autoClose: false, keepInView: true, className: "running-popup"
+            }))
+            .setPopupContent("work <br> out")
+            .openPopup()
+
+        const validInputs = function(...inputs) {
+            inputs.every(inp => Number.isFinite(inp))
+        }
+        const allPositive = function(...inputs) {
+            inputs.every(inp => inp > 0)
+        }
+
+        const type = inputType.value;
+        const distance = +inputDistance.value;
+        const duration = +inputDistance.value;
+        if(type === "running") {
+            const cadence = +inputCadence.value;
+            if (!validInputs(distance, duration, cadence) && !allPositive(distance, duration, cadence)){
+                 return alert("Values show only be position");
+            }
+        } else {
+            const elevation = inputElevation.value;
+            if (!validInputs(distance, duration, cadence)){
+                return alert("Values show only be position");
+           }
+        }
     }
 }
 
