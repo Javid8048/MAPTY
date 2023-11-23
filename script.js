@@ -213,7 +213,7 @@ class App {
 
     clicks() {
         this.#clicks++;
-        console.log(this.#clicks)
+        // console.log(this.#clicks)
     }
 
     reset() {
