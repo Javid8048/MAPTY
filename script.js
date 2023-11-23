@@ -1,9 +1,5 @@
 'use strict';
 
-document.documentElement.querySelector("head").querySelector("title").textContent = "Mapty";
-
-// prettier-ignore
-
 const form = document.querySelector('.form');
 const containerWorkouts = document.querySelector('.workouts');
 const inputType = document.querySelector('.form__input--type');
@@ -11,6 +7,8 @@ const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
+
+document.documentElement.querySelector("head").querySelector("title").textContent = "Mapty";
 
 class Workout {
     date = new Date();
@@ -35,10 +33,7 @@ class Running extends Workout {
         this.calcPace();
         this._setDescription();
     }
-    calcPace() {
-        this.pace = this.duration / this.distance;
-        return this.pace;
-    }
+    calcPace() { this.pace = this.duration / this.distance; return this.pace;}
 }
 class Cycling extends Workout {
     type = "cycling"
@@ -48,15 +43,12 @@ class Cycling extends Workout {
         this.calcSpeed();
         this._setDescription();
     }
-    calcSpeed() {
-        this.speed = this.distance / (this.duration / 60);
-        return this.speed;
-    }
+    calcSpeed() { this.speed = this.distance / (this.duration / 60);  return this.speed; }
 }
 
-const run1 = new Running([39, -12], 5.2, 24, 178);
-const cycling1 = new Cycling([39, -12], 27, 95, 523);
-console.log(run1, cycling1);
+// const run1 = new Running([39, -12], 5.2, 24, 178);
+// const cycling1 = new Cycling([39, -12], 27, 95, 523);
+// console.log(run1, cycling1);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Application architecture ///
@@ -64,16 +56,17 @@ class App {
     #map;
     #mapEvent;
     #workouts = [];
+    #clicks = 0;
     constructor() {
+        this._getLocalStorage();
         this._getPosition();
 
         form.addEventListener("submit", this._newWorkout.bind(this));
-        inputType.addEventListener("change", this._toggleElevationField)
+        inputType.addEventListener("change", this._toggleElevationField);
+        containerWorkouts.addEventListener("click", this._moveToPopup.bind(this))
     }
 
-    _getPosition() {
-        navigator.geolocation.getCurrentPosition(this._loadMap.bind(this), function (error) { console.log(error.message) })
-    }
+    _getPosition() { navigator.geolocation.getCurrentPosition(this._loadMap.bind(this), function (error) { console.log(error.message) })}
 
     _loadMap(position) {
         const { latitude, longitude } = position.coords
@@ -85,6 +78,9 @@ class App {
         }).addTo(this.#map);
 
         this.#map.on('click', this._showForm.bind(this))
+
+        this.#workouts.forEach(work => this._renderWorkout(work));
+        this.#workouts.forEach(work => this._renderWorkoutMarker(work));
     }
 
     _showForm(mapE) {
@@ -127,6 +123,7 @@ class App {
         console.log(this.#workouts);
         this._renderWorkoutMarker(workout);
         this._renderWorkout(workout);
+        this._setLocalStorage();
         
         this._hideForm();
     }
@@ -186,6 +183,42 @@ class App {
           }
 
           form.insertAdjacentHTML("afterend", html);        
+    }
+
+    _moveToPopup(e) {
+        const workoutEl = e.target.closest(".workout");
+        // console.log(workoutEl)
+        if(!workoutEl) return;
+        const workout = this.#workouts.find(work => work.id === +workoutEl.dataset.id );
+        // console.log(workout);
+        this.#map.setView(workout.coords, 13, {
+            pan: {
+                duration: 1,
+            }
+        });
+        this.clicks();
+        console.log(this.#workouts);
+    }
+
+    _setLocalStorage() {
+        localStorage.setItem("workouts", JSON.stringify(this.#workouts));
+    }
+    _getLocalStorage() {
+        const data = JSON.parse(localStorage.getItem("workouts"));
+        if(!data) return;
+        data.forEach(d => d.__proto__ = d.type === "running" ? Running : Cycling )
+        this.#workouts = data;
+        // this.#workouts.forEach(work => this._renderWorkout(work));
+    }
+
+    clicks() {
+        this.#clicks++;
+        console.log(this.#clicks)
+    }
+
+    reset() {
+        localStorage.removeItem("workouts");
+        location.reload();
     }
 
 }
